@@ -1,0 +1,93 @@
+"""Принятие заказа: успех, ошибки при отсутствии или неверных id курьера и заказа.
+
+Кейсы без реального заказа идут через фикстуру courier_only, чтобы не дергать GET /orders/track сразу после создания
+"""
+
+import allure
+import pytest
+from http import HTTPStatus
+
+from helpers.api_docs import (
+    MSG_ACCEPT_COURIER_ID_NOT_EXISTS,
+    MSG_ACCEPT_ORDER_ID_NOT_EXISTS,
+    MSG_HTTP_NOT_FOUND_DOT,
+    MSG_SEARCH_INSUFFICIENT,
+)
+from helpers.courier_helpers import delete_courier, register_courier_with_id
+from helpers.order_helpers import (
+    accept_order,
+    cancel_order_by_track,
+    create_order,
+    finish_order,
+    get_order_by_track,
+)
+
+
+@allure.feature("Orders")
+@allure.story("Принять заказ")
+class TestAcceptOrder:
+    @pytest.fixture
+    def courier_only(self):
+        """Только курьер - без заказа и без GET по треку (для кейсов, где order_id не нужен)"""
+        courier = register_courier_with_id()
+        assert courier is not None
+        yield courier
+        delete_courier(courier["id"])
+
+    @pytest.fixture
+    def courier_and_order(self):
+        courier = register_courier_with_id()
+        assert courier is not None
+        order_response = create_order()
+        assert order_response.status_code == HTTPStatus.CREATED
+        track = order_response.json()["track"]
+        track_response = get_order_by_track(track)
+        assert track_response.status_code == HTTPStatus.OK
+        order_id = track_response.json()["order"]["id"]
+        context = {
+            "courier_id": courier["id"],
+            "order_id": order_id,
+            "track": track,
+        }
+        yield context
+        finish_response = finish_order(order_id)
+        if finish_response.status_code != HTTPStatus.OK:
+            cancel_order_by_track(track)
+        delete_courier(courier["id"])
+
+    @allure.title("Успешное принятие: ok: true")
+    def test_success_returns_ok_true(self, courier_and_order):
+        steps = courier_and_order
+        response = accept_order(steps["order_id"], steps["courier_id"])
+        assert response.status_code == HTTPStatus.OK
+        assert response.json() == {"ok": True}
+
+    @allure.title("Без courierId - 400")
+    def test_missing_courier_id_returns_error(
+        self, courier_and_order, orders_api_client
+    ):
+        order_id = courier_and_order["order_id"]
+        response = orders_api_client.accept(order_id)
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        assert response.json().get("message") == MSG_SEARCH_INSUFFICIENT
+
+    @allure.title("Неверный id курьера - 404")
+    def test_wrong_courier_id_returns_error(self, courier_and_order, orders_api_client):
+        order_id = courier_and_order["order_id"]
+        response = orders_api_client.accept(order_id, courier_id=999_999_999)
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert response.json().get("message") == MSG_ACCEPT_COURIER_ID_NOT_EXISTS
+
+    @allure.title("Без id заказа в пути - 404 Not Found")
+    def test_missing_order_id_returns_error(self, courier_only, orders_api_client):
+        courier_id = courier_only["id"]
+        response = orders_api_client.accept(order_id=None, courier_id=courier_id)
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert response.json().get("message") == MSG_HTTP_NOT_FOUND_DOT
+
+    @allure.title("Неверный id заказа - 404")
+    def test_wrong_order_id_returns_error(self, courier_only):
+        courier_id = courier_only["id"]
+        response = accept_order(999_999_999, courier_id)
+        assert response.status_code == HTTPStatus.NOT_FOUND
+        assert response.json().get("message") == MSG_ACCEPT_ORDER_ID_NOT_EXISTS
