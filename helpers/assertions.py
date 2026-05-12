@@ -7,5 +7,7 @@ def assert_status(response, expected, msg=""):
     )
 
 
-def assert_courier_created(body):
-    assert body == {"ok": True}, f"В теле должно быть только ok: true, а пришло: {body!r}"
+def assert_courier_created(response_json):
+    assert response_json == {
+        "ok": True
+    }, f"В JSON ответе ожидалось {{'ok': True}}, пришло: {response_json!r}"

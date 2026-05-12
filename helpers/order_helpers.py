@@ -1,5 +1,6 @@
 from helpers.courier_helpers import random_string
 from pages.orders_api import OrdersApi
+from testdata.orders import DEFAULT_ORDER_BASE
 
 _default_orders_api = OrdersApi()
 
@@ -9,17 +10,8 @@ def orders_api():
 
 
 def sample_order_body(**overrides):
-    """Базовые поля заказа из документации; comment каждый раз новый, чтобы не дублировать заказы"""
-    body = {
-        "firstName": "Naruto",
-        "lastName": "Uchiha",
-        "address": "Konoha, 142 apt.",
-        "metroStation": "4",
-        "phone": "+7 800 355 35 35",
-        "rentTime": 5,
-        "deliveryDate": "2026-06-06",
-        "comment": random_string(8),
-    }
+    """Сборка body заказа: базовые поля из testdata + уникальный comment"""
+    body = {**DEFAULT_ORDER_BASE, "comment": random_string(8)}
     body.update(overrides)
     return body
 

@@ -1,6 +1,6 @@
+from http import HTTPStatus
 import random
 import string
-from http import HTTPStatus
 
 from pages.courier_api import CourierApi
 
@@ -61,3 +61,13 @@ def delete_courier(courier_id):
 
 def login_courier(login, password):
     return courier_api().login(login, password)
+
+
+def delete_courier_by_credentials(login, password):
+    """Удаляет курьера после успешного логина"""
+    login_response = login_courier(login, password)
+    if login_response.status_code != HTTPStatus.OK:
+        return
+    courier_id = login_response.json().get("id")
+    if courier_id is not None:
+        delete_courier(courier_id)

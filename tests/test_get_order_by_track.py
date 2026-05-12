@@ -4,31 +4,22 @@ import allure
 from http import HTTPStatus
 
 from helpers.api_docs import MSG_ORDER_NOT_FOUND, MSG_SEARCH_INSUFFICIENT
-from helpers.order_helpers import (
-    cancel_order_by_track,
-    create_order,
-    get_order_by_track,
-)
+from helpers.order_helpers import get_order_by_track
 
 
 @allure.feature("Orders")
 @allure.story("Получить заказ по номеру")
 class TestGetOrderByTrack:
     @allure.title("Успешный запрос возвращает объект заказа")
-    def test_success_returns_order_object(self):
-        order_response = create_order()
-        assert order_response.status_code == HTTPStatus.CREATED
-        track = order_response.json()["track"]
-        try:
-            response = get_order_by_track(track)
-            assert response.status_code == HTTPStatus.OK
-            body = response.json()
-            assert "order" in body
-            order = body["order"]
-            assert isinstance(order, dict)
-            assert order.get("track") == track
-        finally:
-            cancel_order_by_track(track)
+    def test_success_returns_order_object(self, created_order_track):
+        track = created_order_track
+        response = get_order_by_track(track)
+        assert response.status_code == HTTPStatus.OK
+        response_json = response.json()
+        assert "order" in response_json
+        order = response_json["order"]
+        assert isinstance(order, dict)
+        assert order.get("track") == track
 
     @allure.title("Без номера заказа - ошибка")
     def test_without_track_returns_error(self, orders_api_client):

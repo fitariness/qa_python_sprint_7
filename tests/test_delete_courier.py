@@ -1,24 +1,14 @@
 """Удаление курьера: успех, запрос без id, несуществующий id, сообщение об ошибке."""
 
 import allure
-import pytest
 from http import HTTPStatus
 
 from helpers.api_docs import MSG_COURIER_NOT_FOUND_BY_ID, MSG_DELETE_NO_ID_NOT_FOUND
-from helpers.courier_helpers import delete_courier, register_courier_with_id
 
 
 @allure.feature("Courier")
 @allure.story("Удаление курьера")
 class TestDeleteCourier:
-    @pytest.fixture
-    def courier_for_delete(self):
-        data = register_courier_with_id()
-        assert data is not None
-        courier_id = data["id"]
-        yield courier_id
-        delete_courier(courier_id)
-
     @staticmethod
     def _assert_unknown_courier_id(response):
         assert response.status_code == HTTPStatus.NOT_FOUND
@@ -43,7 +33,7 @@ class TestDeleteCourier:
         response = courier_api_client.delete(fake_id)
         self._assert_unknown_courier_id(response)
 
-    @allure.title("Неуспешное удаление возвращает сообщение в теле")
+    @allure.title("Неуспешное удаление: в JSON ответе - сообщение об ошибке")
     def test_unsuccessful_returns_error_message(self, courier_api_client):
         response = courier_api_client.delete(999_999_998)
         self._assert_unknown_courier_id(response)

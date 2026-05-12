@@ -4,7 +4,6 @@
 """
 
 import allure
-import pytest
 from http import HTTPStatus
 
 from helpers.api_docs import (
@@ -13,48 +12,12 @@ from helpers.api_docs import (
     MSG_HTTP_NOT_FOUND_DOT,
     MSG_SEARCH_INSUFFICIENT,
 )
-from helpers.courier_helpers import delete_courier, register_courier_with_id
-from helpers.order_helpers import (
-    accept_order,
-    cancel_order_by_track,
-    create_order,
-    finish_order,
-    get_order_by_track,
-)
+from helpers.order_helpers import accept_order
 
 
 @allure.feature("Orders")
 @allure.story("Принять заказ")
 class TestAcceptOrder:
-    @pytest.fixture
-    def courier_only(self):
-        """Только курьер - без заказа и без GET по треку (для кейсов, где order_id не нужен)"""
-        courier = register_courier_with_id()
-        assert courier is not None
-        yield courier
-        delete_courier(courier["id"])
-
-    @pytest.fixture
-    def courier_and_order(self):
-        courier = register_courier_with_id()
-        assert courier is not None
-        order_response = create_order()
-        assert order_response.status_code == HTTPStatus.CREATED
-        track = order_response.json()["track"]
-        track_response = get_order_by_track(track)
-        assert track_response.status_code == HTTPStatus.OK
-        order_id = track_response.json()["order"]["id"]
-        context = {
-            "courier_id": courier["id"],
-            "order_id": order_id,
-            "track": track,
-        }
-        yield context
-        finish_response = finish_order(order_id)
-        if finish_response.status_code != HTTPStatus.OK:
-            cancel_order_by_track(track)
-        delete_courier(courier["id"])
-
     @allure.title("Успешное принятие: ok: true")
     def test_success_returns_ok_true(self, courier_and_order):
         steps = courier_and_order

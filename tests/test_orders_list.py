@@ -1,4 +1,4 @@
-"""Список заказов: тело с массивом заказов, ошибка при несуществующем courierId."""
+"""Список заказов: в JSON ответе - массив заказов; ошибка при несуществующем courierId."""
 
 import allure
 from http import HTTPStatus
@@ -13,9 +13,9 @@ class TestOrdersList:
     def test_response_contains_orders_list(self, orders_api_client):
         response = orders_api_client.list_orders()
         assert response.status_code == HTTPStatus.OK
-        body = response.json()
-        assert "orders" in body
-        assert isinstance(body["orders"], list)
+        response_json = response.json()
+        assert "orders" in response_json
+        assert isinstance(response_json["orders"], list)
 
     @allure.title("Несуществующий courierId - 404 и сообщение")
     def test_unknown_courier_id_returns_not_found(self, orders_api_client):
