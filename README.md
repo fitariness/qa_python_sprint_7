@@ -3,7 +3,7 @@
 Тесты на **pytest** и **requests** к стенду `https://qa-scooter.praktikum-services.ru`
 Отчёты собираются через **Allure**
 
-Базовый адрес стенда задаётся один раз в **`pages/locators.py`** (`ScooterUrls.BASE`). Остальные пути к эндпоинтам - там же.
+Базовый адрес стенда задаётся один раз в **`pages/api_urls.py`** (`ScooterUrls.BASE`). Остальные пути к эндпоинтам — там же.
 
 ### Основная часть
 

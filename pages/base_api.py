@@ -1,4 +1,4 @@
-from pages.locators import ScooterUrls
+from pages.api_urls import ScooterUrls
 
 
 class BaseApi:

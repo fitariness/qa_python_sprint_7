@@ -55,6 +55,16 @@ def register_courier_with_id():
     }
 
 
+def register_courier_with_id_or_raise():
+    """Вызов register_courier_with_id, но при сбое подготовки данных бросает RuntimeError"""
+    courier = register_courier_with_id()
+    if courier is None:
+        raise RuntimeError(
+            "Регистрация курьера не вернула данные: проверьте ответ POST /courier и POST /courier/login",
+        )
+    return courier
+
+
 def delete_courier(courier_id):
     return courier_api().delete(courier_id)
 

@@ -2,7 +2,7 @@ import allure
 import requests
 
 from pages.base_api import BaseApi
-from pages.locators import ScooterUrls
+from pages.api_urls import ScooterUrls
 
 
 class CourierApi(BaseApi):
