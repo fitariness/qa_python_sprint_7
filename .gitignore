@@ -1,0 +1,10 @@
+__pycache__/
+.Python
+*.so
+.venv/
+venv/
+ENV/
+.pytest_cache/
+.idea/
+.vscode/
+*.swp
